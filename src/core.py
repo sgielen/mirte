@@ -96,10 +96,11 @@ class Manager(Module):
 
     class GoCa_Plan(object):
         """ A partial plan for a get_or_create_a call """
-        def __init__(self, man, targets, insts=None,
+        def __init__(self, man, targets, parent, insts=None,
                 insts_implementing=None):
             self.man = man
             self.targets = targets
+            self.parent = parent
             self.insts = dict() if insts is None else insts
             self.insts_implementing = (dict() if insts_implementing
                     is None else insts_implementing)
@@ -160,7 +161,7 @@ class Manager(Module):
             choices_t = choices.items()
             for choice in product(*[xrange(len(v))
                     for k, v in choices_t]):
-                plan2 = Manager.GoCa_Plan(self.man, dict(),
+                plan2 = Manager.GoCa_Plan(self.man, dict(), self.parent,
                         dict(self.insts),
                         dict(self.insts_implementing))
                 tmp = [(choices_t[n][0], choices_t[n][1][m])
@@ -189,10 +190,10 @@ class Manager(Module):
         """ Gets or creates an instance of type <_type> """
         return self.insts[self._get_or_create_a(_type)].object
 
-    def _get_or_create_a(self, _type):
+    def _get_or_create_a(self, _type, _parent=None):
         """ Gets or creates an instance of type <_type> """
-        self.l.debug("get_or_create_a: %s" % _type)
-        stack = [Manager.GoCa_Plan(self, {_type:()})]
+        self.l.debug("get_or_create_a for %s: %s" % (_parent, _type))
+        stack = [Manager.GoCa_Plan(self, {_type:()}, _parent)]
         while stack:
             p = stack.pop()
             if p.finished:
@@ -251,7 +252,7 @@ class Manager(Module):
         for k, v in md.deps.iteritems():
             if not k in settings:
                 settings[k] = self._get_or_create_a(
-                        v.type)
+                        v.type, moduleName)
             if not settings[k] in self.insts:
                 raise ValueError, "No such instance %s" \
                         % settings[k]
