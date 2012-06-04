@@ -9,6 +9,9 @@ from sarah.runtime import get_by_path
 from sarah._itertools import pick
 from sarah._threading import KeyboardInterruptableEvent
 
+class StrictModeError(Exception):
+    pass
+
 class Module(object):
     def __init__(self, settings, logger):
         for k, v in settings.items():
@@ -169,6 +172,8 @@ class Manager(Module):
                 for target, inst_or_mod in tmp:
                     if inst_or_mod[0]:
                         name = inst_or_mod[1]
+                    elif self.man.strict:
+                        raise StrictModeError, "Trying to create %s, but not creating dependency instance of %s in strict mode" % (self.parent, inst_or_mod[1])
                     else:
                         name = plan2.plan_a(
                                 inst_or_mod[1])
