@@ -33,6 +33,7 @@ class Manager(Module):
         if logger is None:
             logger = logging.getLogger(object.__repr__(self))
         super(Manager, self).__init__({}, logger)
+        self.strict = False
         self.running = False
         self.running_event = threading.Event()
         self.modules = dict()
@@ -58,6 +59,12 @@ class Manager(Module):
         self.sleep_event = KeyboardInterruptableEvent()
         # set of paths of the mirteFiles that already have been loaded
         self.loaded_mirteFiles = set([])
+
+    def set_strict(self, strict):
+        """ Change the strictness of this Manager. If strictness is enabled,
+            a Mirtefile referencing a non-existing object will cause an
+            exception to be thrown, instead of creating a new object. """
+        self.strict = strict
 
     def _get_all(self, _type):
         """ Gets all instances implementing type <_type> """

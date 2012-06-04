@@ -14,8 +14,15 @@ def parse_cmdLine_instructions(args):
         put settings. """
     instructions = dict()
     rargs = list()
+    strict = None
     for arg in args:
-        if arg[:2] == '--':
+        # Specialcase --mirte-{strict,lenient}, as it has to be known before
+        # loading of mirte-files starts
+        if arg == '--mirte-strict':
+            strict = True
+        elif arg == '--mirte-lenient':
+            strict = False
+        elif arg[:2] == '--':
             tmp = arg[2:]
             bits = tmp.split('=', 1)
             if len(bits) == 1:
@@ -23,7 +30,7 @@ def parse_cmdLine_instructions(args):
             instructions[bits[0]] = bits[1]
         else:
             rargs.append(arg)
-    return instructions, rargs
+    return instructions, rargs, strict
 
 def execute_cmdLine_instructions(instructions, m, l):
     """ Applies the instructions given via
@@ -78,8 +85,10 @@ def main():
     sarah.coloredLogging.basicConfig(level=logging.DEBUG,
                 formatter=MirteFormatter())
     l = logging.getLogger('mirte')
-    instructions, args = parse_cmdLine_instructions(sys.argv[1:])
+    instructions, args, strict = parse_cmdLine_instructions(sys.argv[1:])
     m = Manager(l)
+    if not strict is None:
+        m.set_strict(strict)
     load_mirteFile(args[0] if args else 'default', m, logger=l)
     execute_cmdLine_instructions(instructions, m, l)
     m.run()
